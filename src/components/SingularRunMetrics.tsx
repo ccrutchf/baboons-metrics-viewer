@@ -1,8 +1,8 @@
 import React from 'react';
 
 import {
-    ComboBox,
-    IComboBoxOption,
+    Dropdown,
+    IDropdownOption,
     Label,
 } from '@fluentui/react';
 import { Line } from 'react-chartjs-2';
@@ -10,7 +10,11 @@ import { Line } from 'react-chartjs-2';
 import MetricsService from '../services/MetricsService';
 
 interface MetricsTransformation {
-    y: (metrics: any) => number;
+    display: string;
+    x: (idx: number) => number;
+    xTitle: string;
+    y: (metric: any) => number;
+    yTitle: string;
 }
 
 interface Props {
@@ -20,15 +24,15 @@ interface Props {
 }
 
 interface State {
-    dates: IComboBoxOption[];
-    branches: IComboBoxOption[];
+    dates: IDropdownOption[];
+    branches: IDropdownOption[];
     metricsData: {
         datasets: any[]
     };
-    metricsTags: IComboBoxOption[];
-    metricsType: IComboBoxOption[];
+    metricsTags: IDropdownOption[];
+    metricsType: IDropdownOption[];
     selectedVideoFile?: string;
-    videoFiles: IComboBoxOption[];
+    videoFiles: IDropdownOption[];
 }
 
 class SingularRunMetrics extends React.Component<Props, State> {
@@ -53,7 +57,7 @@ class SingularRunMetrics extends React.Component<Props, State> {
             metricsTags: [],
             metricsType: Object.keys(props.metricsTransformations).map(k => ({
                 key: k,
-                text: k,
+                text: props.metricsTransformations[k].display,
                 data: props.metricsTransformations[k]
             })),
             videoFiles: []
@@ -166,9 +170,9 @@ class SingularRunMetrics extends React.Component<Props, State> {
                 this.setState(() => ({
                     metricsData: {
                         datasets: metrics.map(m => ({
-                            label: `${m.branch}:${m.date} - ${this.selectedMetricsType}`,
+                            label: `${m.branch}:${new Date(m.date).toLocaleString()} - ${this.metricsTransform?.display}`,
                             data: m.metrics.map((d, idx) => ({
-                                x: idx,
+                                x: this.metricsTransform?.x(idx),
                                 y: this.metricsTransform?.y(d)
                             }))
                         }))
@@ -187,43 +191,43 @@ class SingularRunMetrics extends React.Component<Props, State> {
         return (
             <div className="ms-Grid" dir="ltr">
                 <div className="ms-Grid-row">
-                    <div className="ms-Grid-col ms-lg2">
+                    <div className="ms-Grid-col ms-sm2">
                         <Label>Video File</Label>
-                        <ComboBox
+                        <Dropdown
                             options={this.state.videoFiles}
                             disabled={disableVideoFile}
                             onChange={(p, o) => this.updateBranchesAsync(o?.key)} />
                     </div>
 
-                    <div className="ms-Grid-col ms-lg2">
+                    <div className="ms-Grid-col ms-sm2">
                         <Label>Branch</Label>
-                        <ComboBox
+                        <Dropdown
                             options={this.state.branches}
                             disabled={disableBranch}
                             onChange={(p, o) => this.updateDatesAsync(o?.key, o?.selected)}
                             multiSelect />
                     </div>
 
-                    <div className="ms-Grid-col ms-lg2">
+                    <div className="ms-Grid-col ms-sm2">
                         <Label>Date</Label>
-                        <ComboBox
+                        <Dropdown
                             options={this.state.dates}
                             disabled={disableDate}
                             onChange={(p, o) => this.updateMetricsTagsAsync(o?.key, o?.selected)}
                             multiSelect />
                     </div>
 
-                    <div className="ms-Grid-col ms-lg3">
+                    <div className="ms-Grid-col ms-sm3">
                         <Label>Metrics Type</Label>
-                        <ComboBox
+                        <Dropdown
                             options={this.state.metricsType}
                             disabled={disableMetricsType}
                             onChange={(p, o) => this.handleMetricTypeAsync(o?.key, o?.data)} />
                     </div>
 
-                    <div className="ms-Grid-col ms-lg3">
+                    <div className="ms-Grid-col ms-sm3">
                         <Label>Metrics Tags</Label>
-                        <ComboBox
+                        <Dropdown
                             options={this.state.metricsTags}
                             disabled={disableMetricsTags}
                             onChange={(p, o) => this.handleMetricTagsAsync(o?.key, o?.selected)}
@@ -232,36 +236,39 @@ class SingularRunMetrics extends React.Component<Props, State> {
                 </div>
 
                 <div className="ms-Grid-row">
-                    <Line data={this.state.metricsData} options={{
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top' as const,
-                            },
-                            title: {
-                                display: true,
-                                text: 'Count vs. Seconds',
-                            },
-                        },
-                        scales: {
-                            x: {
-                                type: 'linear' as const,
-                                axis: 'x',
+                    <Line
+                        data={this.state.metricsData}
+
+                        options={{
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'top' as const,
+                                },
                                 title: {
                                     display: true,
-                                    text: 'Seconds'
-                                }
+                                    text: `${this.metricsTransform?.display}: ${this.metricsTransform?.yTitle} vs. ${this.metricsTransform?.xTitle}`,
+                                },
                             },
-                            y: {
-                                type: 'linear' as const,
-                                axis: 'y',
-                                title: {
-                                    display: true,
-                                    text: 'Count'
+                            scales: {
+                                x: {
+                                    type: 'linear' as const,
+                                    axis: 'x',
+                                    title: {
+                                        display: true,
+                                        text: this.metricsTransform?.yTitle
+                                    }
+                                },
+                                y: {
+                                    type: 'linear' as const,
+                                    axis: 'y',
+                                    title: {
+                                        display: true,
+                                        text: this.metricsTransform?.xTitle
+                                    }
                                 }
                             }
-                        }
-                    }} />
+                        }} />
                 </div>
             </div>
         );

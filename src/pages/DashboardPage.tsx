@@ -9,16 +9,32 @@ class DashboardPage extends React.Component {
                 <CumulativeMetrics 
                     metricsTransformations={{
                         truePositive: {
-                            y: (m) => m["true_positive"]
+                            display: 'True Positive',
+                            x: (idx) => idx / 30,
+                            xTitle: 'Count',
+                            y: (m) => m["true_positive"],
+                            yTitle: 'Seconds'
                         },
                         falsePositive: {
-                            y: (m) => m["false_positive"]
+                            display: 'False Positive',
+                            x: (idx) => idx / 30,
+                            xTitle: 'Count',
+                            y: (m) => m["false_positive"],
+                            yTitle: 'Seconds'
                         },
                         falseNegative: {
+                            display: 'False Negative',
+                            x: (idx) => idx / 30,
+                            xTitle: 'Count',
                             y: (m) => m["false_negative"],
+                            yTitle: 'Seconds'
                         },
                         errorRate: {
-                            y: (m) => (m["false_positive"] + m["false_negative"]) / (m["true_positive"] + m["false_negative"])
+                            display: 'Error Rate',
+                            x: (idx) => idx / 30,
+                            xTitle: 'Error Rate',
+                            y: (m) => (m["false_positive"] + m["false_negative"]) / (m["true_positive"] + m["false_negative"]),
+                            yTitle: 'Seconds'
                         }
                     }} />
             </div>
